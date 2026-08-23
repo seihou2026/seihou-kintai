@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>SEIHOU勤怠 試作品 v0.2</title>
+<style>
+:root{--orange:#e97824;--orange2:#fff3e8;--ink:#222;--muted:#777;--line:#ead7c7;--bg:#fffaf6;--warn:#fff4d8;}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic",Meiryo,sans-serif;background:var(--bg);color:var(--ink);}
+button,input,select{font:inherit}
+.app{width:100vw;height:100vh;display:flex;flex-direction:column;background:white;overflow:hidden}
+header{height:82px;display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;padding:0 34px;border-bottom:1px solid #eee;background:#fff}
+.brand{font-size:26px;font-weight:800;color:var(--orange)}
+.store{text-align:center;font-size:24px;font-weight:800}
+.clock{text-align:right}
+.clock .time{font-size:26px;font-weight:800}
+.clock .date{font-size:13px;color:var(--muted)}
+main{flex:1;min-height:0;position:relative}
+.screen{height:100%;display:none}
+.screen.active{display:flex}
+#staffScreen{flex-direction:column;padding:26px 34px 20px}
+.lead{text-align:center;font-size:22px;font-weight:700;margin-bottom:18px}
+.staff-grid{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:82px;gap:18px;padding:4px 6px 20px}
+.staff-btn{border:3px solid var(--orange);border-radius:18px;background:white;font-size:26px;font-weight:800;box-shadow:0 2px 5px rgba(0,0,0,.04)}
+.staff-btn:active{transform:scale(.99);background:var(--orange2)}
+.footer{height:92px;display:flex;align-items:center;justify-content:center;gap:18px;border-top:1px solid #eee;background:#fff}
+.support-btn{min-width:270px;padding:18px 30px;border:0;border-radius:18px;background:var(--orange);color:white;font-size:22px;font-weight:800}
+.admin-btn{padding:14px 20px;border:1px solid #ddd;border-radius:14px;background:white;color:#777;font-weight:700}
+#punchScreen{align-items:center;justify-content:center;flex-direction:column;padding:30px}
+.person{font-size:42px;font-weight:900;margin-bottom:36px}
+.actions{width:min(650px,82vw);display:flex;flex-direction:column;gap:18px}
+.action{height:92px;border-radius:22px;border:0;font-size:30px;font-weight:900;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.primary{background:var(--orange);color:#fff}
+.secondary{background:white;border:3px solid var(--orange);color:var(--orange)}
+.back{margin-top:28px;background:transparent;border:0;font-size:20px;color:#666;padding:12px 30px}
+#doneScreen{align-items:center;justify-content:center;flex-direction:column}
+.done-icon{font-size:70px}.done-text{font-size:42px;font-weight:900;margin-top:10px}
+.done-time{font-size:30px;color:var(--orange);font-weight:800;margin-top:12px}.done-sub{color:#777;margin-top:18px}
+
+#managerScreen{flex-direction:column;padding:24px 30px;overflow:auto}
+.manager-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.manager-title{font-size:30px;font-weight:900}
+.manager-sub{color:#777}
+.manager-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.tile{background:white;border:2px solid #eee;border-radius:20px;padding:24px;text-align:left;min-height:126px;box-shadow:0 3px 10px rgba(0,0,0,.04)}
+.tile h3{margin:0 0 8px;font-size:23px}.tile p{margin:0;color:#777}.tile .count{font-size:30px;font-weight:900;color:var(--orange)}
+.warning{background:var(--warn);border-color:#f0c96e}
+.manager-actions{display:flex;justify-content:flex-end;margin-top:20px}
+.logout{border:0;border-radius:14px;background:#eee;padding:12px 22px}
+
+#panelScreen{flex-direction:column;padding:24px 30px;overflow:auto}
+.panel-head{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+.panel-head h2{margin:0;font-size:28px}
+.panel-back{border:0;background:#eee;border-radius:12px;padding:10px 16px}
+.list{display:flex;flex-direction:column;gap:12px}
+.rowcard{border:1px solid #e6e6e6;border-radius:16px;padding:18px;background:#fff}
+.rowcard strong{font-size:20px}.meta{color:#777;margin-top:6px;line-height:1.6}
+.form{display:grid;grid-template-columns:170px 1fr;gap:14px 18px;max-width:760px;margin:0 auto;width:100%}
+.form label{font-weight:800;align-self:center}.form input,.form select{padding:14px;border:1px solid #ccc;border-radius:12px;font-size:18px}
+.save{grid-column:1/-1;margin-top:12px;background:var(--orange);color:#fff;border:0;border-radius:16px;padding:16px;font-size:20px;font-weight:800}
+.note{color:#777;font-size:14px;margin-top:18px;text-align:center}
+
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;padding:24px;z-index:50}
+.modal.show{display:flex}.card{width:min(760px,92vw);max-height:82vh;overflow:auto;background:white;border-radius:24px;padding:30px;box-shadow:0 16px 50px rgba(0,0,0,.22)}
+.card h2{text-align:center;margin:0 0 20px}.store-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.store-btn{padding:20px;border-radius:16px;border:2px solid var(--orange);background:white;font-size:21px;font-weight:800}
+.modal-note{font-size:13px;color:#777;text-align:center;margin-top:16px}
+.close{display:block;margin:20px auto 0;border:0;background:#eee;border-radius:12px;padding:12px 24px;font-size:17px}
+.pinbox{display:flex;flex-direction:column;gap:14px}
+.pinbox input{font-size:28px;text-align:center;padding:16px;border:1px solid #ccc;border-radius:14px;letter-spacing:.3em}
+.login{background:var(--orange);color:white;border:0;border-radius:14px;padding:16px;font-size:20px;font-weight:800}
+.demo{position:fixed;right:12px;bottom:8px;font-size:11px;color:#aaa;user-select:none}.demo button{font-size:11px;border:0;background:transparent;color:#aaa;text-decoration:underline}
+@media (max-height:620px){header{height:68px}.staff-grid{grid-auto-rows:66px;gap:12px}.staff-btn{font-size:22px}.footer{height:72px}.support-btn{padding:12px 24px}.action{height:74px}.person{font-size:34px;margin-bottom:24px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="brand">SEIHOU勤怠</div>
+  <div class="store" id="storeLabel">児玉店</div>
+  <div class="clock"><div class="time" id="clock">--:--</div><div class="date" id="date">----</div></div>
+</header>
+
+<main>
+  <section id="staffScreen" class="screen active">
+    <div class="lead" id="lead">スタッフを選択してください</div>
+    <div class="staff-grid" id="staffGrid"></div>
+    <div class="footer">
+      <button class="support-btn" id="supportBtn">応援勤務</button>
+      <button class="admin-btn" id="adminBtn">管理者</button>
+    </div>
+  </section>
+
+  <section id="punchScreen" class="screen">
+    <div class="person" id="personName">---</div>
+    <div class="actions" id="actions"></div>
+    <button class="back" id="backBtn">← 戻る</button>
+  </section>
+
+  <section id="doneScreen" class="screen">
+    <div class="done-icon">✓</div>
+    <div class="done-text" id="doneText">出勤しました</div>
+    <div class="done-time" id="doneTime">08:30</div>
+    <div class="done-sub">スタッフ一覧へ戻ります</div>
+  </section>
+
+  <section id="managerScreen" class="screen">
+    <div class="manager-head">
+      <div><div class="manager-title">店長画面</div><div class="manager-sub">児玉店</div></div>
+      <div class="manager-sub">必要なところだけ確認</div>
+    </div>
+    <div class="manager-grid">
+      <button class="tile warning" data-panel="alerts"><h3>⚠ 未打刻確認</h3><div class="count" id="alertCount">0件</div><p>10時間以上の勤務中・休憩中</p></button>
+      <button class="tile" data-panel="register"><h3>スタッフ登録</h3><p>新人をその場ですぐ登録</p></button>
+      <button class="tile" data-panel="logs"><h3>勤怠確認</h3><p>今日の打刻履歴を見る</p></button>
+      <button class="tile" data-panel="history"><h3>修正履歴</h3><p>取消・修正の履歴を確認</p></button>
+    </div>
+    <div class="manager-actions"><button class="logout" id="logoutBtn">スタッフ画面へ戻る</button></div>
+  </section>
+
+  <section id="panelScreen" class="screen">
+    <div class="panel-head"><button class="panel-back" id="panelBack">← 店長画面</button><h2 id="panelTitle">---</h2></div>
+    <div id="panelBody"></div>
+  </section>
+</main>
+</div>
+
+<div class="modal" id="supportModal"><div class="card"><h2>所属店舗を選択</h2><div class="store-grid" id="storeGrid"></div><div class="modal-note">所属店舗 → 名前 の順で選びます。</div><button class="close" id="modalClose">閉じる</button></div></div>
+
+<div class="modal" id="loginModal"><div class="card"><h2>管理者ログイン</h2><div class="pinbox"><input id="pin" inputmode="numeric" maxlength="4" placeholder="PIN"><button class="login" id="loginBtn">ログイン</button></div><div class="modal-note">試作品のPIN：1234</div><button class="close" id="loginClose">閉じる</button></div></div>
+
+<div class="demo">試作品 v0.4 ・ <button id="resetBtn">デモ記録をリセット</button></div>
+
+<script>
+const CURRENT_STORE='児玉店';
+const baseStaff={
+ '児玉店':['安藤 花子','伊藤 太郎','加藤 健一','佐藤 美咲','鈴木 一郎','竹本 太郎','田中 愛','中村 健','山田 花','渡辺 翔太'],
+ 'メッツ店':['井上 太郎','大野 美咲','木村 健','小林 愛','斎藤 翔','高橋 花子'],
+ '平安通店':['阿部 健','遠藤 花','加藤 一郎','佐々木 美咲','松本 太郎'],
+ '安井町店':['石川 花子','岡田 健','清水 愛','森 太郎'],
+ '尼ヶ坂店':['青木 健','近藤 愛','長谷川 太郎','山口 花子']
+};
+let selectedStaff=null, selectedHomeStore=CURRENT_STORE;
+const stateKey=n=>`seihou_state_${n}`;
+const logsKey='seihou_punch_logs_v04';
+const customStaffKey='seihou_custom_staff_v04';
+const historyKey='seihou_history_v04';
+const el=id=>document.getElementById(id);
+
+function now(){return new Date()}
+function two(n){return String(n).padStart(2,'0')}
+function timeStr(d){return `${two(d.getHours())}:${two(d.getMinutes())}`}
+function dateStr(d){return `${d.getFullYear()}/${two(d.getMonth()+1)}/${two(d.getDate())}`}
+function updateClock(){const d=now();el('clock').textContent=timeStr(d);el('date').textContent=dateStr(d)}
+setInterval(updateClock,1000);updateClock();
+
+function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));el(id).classList.add('active')}
+function customStaff(){return JSON.parse(localStorage.getItem(customStaffKey)||'[]')}
+function staffFor(store){return [...(baseStaff[store]||[]),...customStaff().filter(x=>x.store===store&&x.status!=='退職').map(x=>x.name)].sort((a,b)=>a.localeCompare(b,'ja'))}
+function renderStaff(names=staffFor(CURRENT_STORE)){const g=el('staffGrid');g.innerHTML='';names.forEach(n=>{const b=document.createElement('button');b.className='staff-btn';b.textContent=n;b.onclick=()=>openPunch(n);g.appendChild(b)})}
+function getState(n){return localStorage.getItem(stateKey(n))||'未出勤'}
+function workNo(n){return Number(localStorage.getItem(`seihou_workno_${n}`)||1)}
+function setWorkNo(n,v){localStorage.setItem(`seihou_workno_${n}`,String(v))}
+function setState(n,s){localStorage.setItem(stateKey(n),s)}
+function openPunch(name){selectedStaff=name;el('personName').textContent=name;renderActions();show('punchScreen')}
+function addAction(label,kind,next,msg,cls='primary'){const b=document.createElement('button');b.className=`action ${cls}`;b.textContent=label;b.onclick=()=>punch(kind,next,msg);el('actions').appendChild(b)}
+function renderActions(){
+  const s=getState(selectedStaff), box=el('actions'); box.innerHTML='';
+  if(s==='未出勤') addAction('出勤','出勤','勤務中','出勤しました');
+  else if(s==='勤務中'){addAction('休憩','休憩','休憩中','休憩中','secondary');addAction('退勤','退勤','退勤済み','退勤しました');}
+  else if(s==='休憩中') addAction('戻り','戻り','勤務中','戻りました');
+  else if(s==='退勤済み'){addAction('出勤②','出勤②','勤務中②','出勤②しました');}
+  else if(s==='勤務中②'){addAction('休憩','休憩','休憩中②','休憩中','secondary');addAction('退勤②','退勤②','退勤済み②','退勤②しました');}
+  else if(s==='休憩中②') addAction('戻り','戻り','勤務中②','戻りました');
+  else {const p=document.createElement('div');p.style='text-align:center;font-size:28px;font-weight:800;color:#777;padding:30px';p.textContent='本日の打刻は終了しています';box.appendChild(p)}
+}
+function punch(type,next,msg){
+  const d=now();
+  const log={id:crypto.randomUUID(),staff:selectedStaff,home_store:selectedHomeStore,work_store:CURRENT_STORE,type,at:d.toISOString(),display_time:timeStr(d),cancelled:false};
+  const logs=JSON.parse(localStorage.getItem(logsKey)||'[]');logs.push(log);localStorage.setItem(logsKey,JSON.stringify(logs));
+  setState(selectedStaff,next);el('doneText').textContent=msg;el('doneTime').textContent=timeStr(d);show('doneScreen');
+  setTimeout(()=>{selectedStaff=null;selectedHomeStore=CURRENT_STORE;el('lead').textContent='スタッフを選択してください';renderStaff();show('staffScreen')},1600)
+}
+el('backBtn').onclick=()=>{selectedStaff=null;selectedHomeStore=CURRENT_STORE;el('lead').textContent='スタッフを選択してください';renderStaff();show('staffScreen')}
+
+renderStaff();
+
+const supportModal=el('supportModal');
+el('supportBtn').onclick=()=>{
+  el('storeGrid').innerHTML='';
+  Object.keys(baseStaff).filter(s=>s!==CURRENT_STORE).forEach(store=>{
+    const b=document.createElement('button');b.className='store-btn';b.textContent=store;
+    b.onclick=()=>{selectedHomeStore=store;supportModal.classList.remove('show');renderStaff(staffFor(store));el('lead').textContent=`${store}所属スタッフを選択してください`};
+    el('storeGrid').appendChild(b)
+  });
+  supportModal.classList.add('show')
+}
+el('modalClose').onclick=()=>supportModal.classList.remove('show');
+supportModal.onclick=e=>{if(e.target===supportModal)supportModal.classList.remove('show')}
+
+const loginModal=el('loginModal');
+el('adminBtn').onclick=()=>{el('pin').value='';loginModal.classList.add('show');setTimeout(()=>el('pin').focus(),100)}
+el('loginClose').onclick=()=>loginModal.classList.remove('show')
+el('loginBtn').onclick=()=>{
+  if(el('pin').value==='1234'){loginModal.classList.remove('show');refreshManager();show('managerScreen')}
+  else alert('PINが違います')
+}
+el('logoutBtn').onclick=()=>{renderStaff();show('staffScreen')}
+
+function activeLogs(){return JSON.parse(localStorage.getItem(logsKey)||'[]').filter(x=>!x.cancelled)}
+function calcAlerts(){
+  const logs=activeLogs(), latest={};
+  logs.forEach(l=>latest[l.staff]=l);
+  const cutoff=10*60*60*1000, n=Date.now();
+  return Object.values(latest).filter(l=>(l.type==='出勤'||l.type==='休憩') && n-new Date(l.at).getTime()>=cutoff)
+}
+function refreshManager(){el('alertCount').textContent=`${calcAlerts().length}件`}
+document.querySelectorAll('.tile').forEach(b=>b.onclick=()=>openPanel(b.dataset.panel))
+el('panelBack').onclick=()=>{refreshManager();show('managerScreen')}
+
+function openPanel(kind){
+  const body=el('panelBody'); body.innerHTML='';
+  if(kind==='alerts'){
+    el('panelTitle').textContent='未打刻確認';
+    const alerts=calcAlerts();
+    if(!alerts.length){body.innerHTML='<div class="rowcard"><strong>現在、10時間超の確認対象はありません。</strong><div class="meta">勤務中・休憩中が10時間を超えた場合だけ表示します。</div></div>'}
+    else alerts.forEach(a=>{body.innerHTML+=`<div class="rowcard"><strong>⚠ ${a.staff}</strong><div class="meta">${a.work_store} ／ ${a.type==='休憩'?'休憩中':'勤務中'}<br>開始 ${new Date(a.at).toLocaleString('ja-JP')}</div></div>`})
+  } else if(kind==='register'){
+    el('panelTitle').textContent='スタッフ登録';
+    body.innerHTML=`<div class="form">
+      <label>氏名</label><input id="regName" placeholder="例：山田 太郎">
+      <label>フリガナ</label><input id="regKana" placeholder="例：ヤマダ タロウ">
+      <label>所属店舗</label><select id="regStore">${Object.keys(baseStaff).map(s=>`<option ${s===CURRENT_STORE?'selected':''}>${s}</option>`).join('')}</select>
+      <label>雇用区分</label><select id="regType"><option>社員</option><option>アルバイト</option></select>
+      <label>入社日</label><input id="regDate" type="date">
+      <button class="save" id="regSave">登録する</button>
+    </div><div class="note">登録後、本部承認なしですぐスタッフ一覧に表示されます。</div>`;
+    setTimeout(()=>{el('regDate').value=new Date().toISOString().slice(0,10);el('regSave').onclick=registerStaff},0)
+  } else if(kind==='logs'){
+    el('panelTitle').textContent='今日の勤怠確認';
+    const today=new Date().toISOString().slice(0,10);
+    const logs=JSON.parse(localStorage.getItem(logsKey)||'[]').filter(x=>x.at.slice(0,10)===today && !x.cancelled);
+    const people=staffFor(CURRENT_STORE);
+    people.forEach(name=>{
+      const ls=logs.filter(x=>x.staff===name);
+      const latest=ls[ls.length-1];
+      let status='まだ出勤していません';
+      if(latest){
+        if(latest.type==='退勤②') status='退勤済み（出勤②有）';
+        else if(latest.type==='退勤') status='退勤済み';
+        else if(latest.type==='出勤②') status='出勤②';
+        else status=latest.type;
+      }
+      const extra=ls.some(x=>x.type==='出勤②') ? `<div class="meta">出勤②の詳細： ${ls.filter(x=>['出勤②','休憩','戻り','退勤②'].includes(x.type)).map(x=>`${x.type} ${x.display_time}`).join(' ／ ')}</div>` : '';
+      body.innerHTML+=`<div class="rowcard"><strong>${name}</strong><div class="meta">${status}</div>${extra}</div>`;
+    })
+  } else if(kind==='history'){
+    el('panelTitle').textContent='修正履歴';
+    const h=JSON.parse(localStorage.getItem(historyKey)||'[]');
+    body.innerHTML=h.length?h.slice().reverse().map(x=>`<div class="rowcard"><strong>${x.staff}</strong><div class="meta">${x.action}<br>${x.reason}<br>${new Date(x.at).toLocaleString('ja-JP')}</div></div>`).join(''):'<div class="rowcard">修正履歴はまだありません。</div>';
+  }
+  show('panelScreen')
+}
+function registerStaff(){
+  const name=el('regName').value.trim(), kana=el('regKana').value.trim(), store=el('regStore').value, type=el('regType').value, join=el('regDate').value;
+  if(!name||!kana||!join){alert('氏名・フリガナ・入社日を入力してください');return}
+  const arr=customStaff();
+  arr.push({id:'S'+String(Date.now()),name,kana,store,type,join,status:'在籍'});
+  localStorage.setItem(customStaffKey,JSON.stringify(arr));
+  alert('登録しました。スタッフ一覧に反映されます。');
+  show('managerScreen');refreshManager();
+}
+
+el('resetBtn').onclick=()=>{
+  if(confirm('試作品のデータをリセットしますか？')){
+    Object.values(baseStaff).flat().forEach(n=>localStorage.removeItem(stateKey(n)));
+    customStaff().forEach(x=>localStorage.removeItem(stateKey(x.name)));
+    localStorage.removeItem(logsKey);localStorage.removeItem(customStaffKey);localStorage.removeItem(historyKey);
+    renderStaff();show('staffScreen');alert('リセットしました')
+  }
+}
+</script>
+</body>
+</html>
