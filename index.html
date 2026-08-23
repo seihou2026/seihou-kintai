@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <title>SEIHOU勤怠 試作品 v0.2</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--orange:#e97824;--orange2:#fff3e8;--ink:#222;--muted:#777;--line:#ead7c7;--bg:#fffaf6;--warn:#fff4d8;}
 *{box-sizing:border-box}
@@ -280,6 +281,9 @@ el('resetBtn').onclick=()=>{
     renderStaff();show('staffScreen');alert('リセットしました')
   }
 }
+const SUPABASE_URL = 'https://qalxtyrsyumfdutikynq.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFhbHh0eXJzeXVtZmR1dGlreW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc0NDcyMzYsImV4cCI6MjEwMzAyMzIzNn0.gKHFPNtjWyN42Q1Y3wncm5BzYSUPhgVkHKJdlBy96EI';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 </script>
 </body>
 </html>
