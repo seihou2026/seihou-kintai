@@ -148,7 +148,9 @@ const logsKey='seihou_punch_logs_v04';
 const customStaffKey='seihou_custom_staff_v04';
 const historyKey='seihou_history_v04';
 const el=id=>document.getElementById(id);
-
+const SUPABASE_URL='https://qalxtyrsyumfdutikynq.supabase.co';
+  const SUPABASE_KEY='sb_publishable_-twwrSKwGrU2erS0CSsV5Q_8cHyy0Rc';
+  const supabaseClient=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 function now(){return new Date()}
 function two(n){return String(n).padStart(2,'0')}
 function timeStr(d){return `${two(d.getHours())}:${two(d.getMinutes())}`}
@@ -176,10 +178,19 @@ function renderActions(){
   else if(s==='休憩中②') addAction('戻り','戻り','勤務中②','戻りました');
   else {const p=document.createElement('div');p.style='text-align:center;font-size:28px;font-weight:800;color:#777;padding:30px';p.textContent='本日の打刻は終了しています';box.appendChild(p)}
 }
-function punch(type,next,msg){
+async function punch(type,next,msg){
   const d=now();
   const log={id:crypto.randomUUID(),staff:selectedStaff,home_store:selectedHomeStore,work_store:CURRENT_STORE,type,at:d.toISOString(),display_time:timeStr(d),cancelled:false};
   const logs=JSON.parse(localStorage.getItem(logsKey)||'[]');logs.push(log);localStorage.setItem(logsKey,JSON.stringify(logs));
+const { error } = await supabaseClient
+  .from('punch_logs')
+  .insert([log]);
+
+if (error) {
+  console.error('Supabase保存エラー:', error);
+  alert('打刻データの保存に失敗しました');
+  return;
+}  
   setState(selectedStaff,next);el('doneText').textContent=msg;el('doneTime').textContent=timeStr(d);show('doneScreen');
   setTimeout(()=>{selectedStaff=null;selectedHomeStore=CURRENT_STORE;el('lead').textContent='スタッフを選択してください';renderStaff();show('staffScreen')},1600)
 }
