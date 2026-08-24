@@ -264,7 +264,7 @@ function openPanel(kind){
         else if(latest.type==='出勤②') status='出勤②';
         else status=latest.type;
       }
-      const extra=ls.some(x=>x.type==='出勤②') ? `<div class="meta">出勤②の詳細： ${ls.filter(x=>['出勤②','休憩','戻り','退勤②'].includes(x.type)).map(x=>`${x.type} ${x.display_time}`).join(' ／ ')}</div>` : '';
+const extra=ls.length ? `<div class="meta" style="margin-top:8px">${ls.filter(x=>['出勤','出勤②','休憩','戻り','退勤','退勤②'].includes(x.type)).map(x=>`${x.type.replace('②','')} ${x.display_time}`).join('　／　')}</div>` : '';
       body.innerHTML+=`<div class="rowcard"><strong>${name}</strong><div class="meta">${status}</div>${extra}</div>`;
     })
   } else if(kind==='history'){
