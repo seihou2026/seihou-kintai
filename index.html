@@ -264,7 +264,23 @@ function openPanel(kind){
         else if(latest.type==='出勤②') status='出勤②';
         else status=latest.type;
       }
-const extra=ls.length ? `<div class="meta" style="margin-top:8px">${ls.filter(x=>['出勤','出勤②','休憩','戻り','退勤','退勤②'].includes(x.type)).map(x=>`${x.type.replace('②','')} ${x.display_time}`).join('　／　')}</div>` : '';
+const events=ls.filter(x=>['出勤','出勤②','休憩','戻り','退勤','退勤②'].includes(x.type));
+const firstIn=events.find(x=>x.type==='出勤'||x.type==='出勤②');
+const breaks=events.filter(x=>x.type==='休憩');
+const returns=events.filter(x=>x.type==='戻り');
+const lastOut=[...events].reverse().find(x=>x.type==='退勤'||x.type==='退勤②');
+
+let lines=[];
+if(firstIn) lines.push(`出勤　${firstIn.display_time}`);
+breaks.forEach((b,i)=>{
+  const r=returns[i];
+  lines.push(`休憩　${b.display_time}${r ? ` → 戻り　${r.display_time}` : ''}`);
+});
+if(lastOut) lines.push(`退勤　${lastOut.display_time}`);
+
+const extra=lines.length
+  ? `<div class="meta" style="margin-top:8px;line-height:1.8">${lines.join('<br>')}</div>`
+  : '';
       body.innerHTML+=`<div class="rowcard"><strong>${name}</strong><div class="meta">${status}</div>${extra}</div>`;
     })
   } else if(kind==='history'){
