@@ -262,7 +262,7 @@ function openPanel(kind){
         if(latest.type==='退勤②') status='退勤済み（出勤②有）';
         else if(latest.type==='退勤') status='退勤済み';
         else if(latest.type==='出勤②') status='出勤②';
-        else status=latest.type;
+
       }
 const events=ls.filter(x=>['出勤','出勤②','休憩','戻り','退勤','退勤②'].includes(x.type));
 const firstIn=events.find(x=>x.type==='出勤'||x.type==='出勤②');
